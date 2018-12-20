@@ -1,0 +1,348 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+     "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.jwt.dao.customer.CustomerDao">
+  <!--SQL片段  -->
+    <sql id="selectCustomerListWhere">
+        <where>
+	       <if test="cust_name != null" >
+	           cust_name like "%"#{cust_name}"%"
+	       </if>
+	       <if test="cust_source != null" >
+	        and cust_source = #{cust_source}
+	       </if>
+	       <if test="cust_industry != null" >
+	        and cust_industry = #{cust_industry}
+	       </if>
+	       <if test="cust_level != null" >
+	        and cust_level = #{cust_level}
+	       </if>
+        </where>
+    </sql>
+	<!-- 查询客户列表  -->
+	<select id="selectCustomerList" parameterType="customer" 
+                                           resultType="customer">
+		SELECT
+			cust_id,
+			cust_name,
+			cust_user_id,
+			cust_create_id,
+			b.dict_item_name cust_source,
+			c.dict_item_name cust_industry,
+			d.dict_item_name cust_level,
+			cust_linkman,
+			cust_phone,
+			cust_mobile,
+			cust_createtime
+		FROM
+			customer a
+		LEFT JOIN (
+			SELECT
+				dict_id,
+				dict_item_name
+			FROM
+				base_dict
+			WHERE
+				dict_type_code = '002'
+		) b ON a.cust_source = b.dict_id
+		LEFT JOIN (
+			SELECT
+				dict_id,
+				dict_item_name
+			FROM
+				base_dict
+			WHERE
+				dict_type_code = '001'
+		) c ON a.cust_industry = c.dict_id
+		LEFT JOIN (
+			SELECT
+				dict_id,
+				dict_item_name
+			FROM
+				base_dict
+			WHERE
+				dict_type_code = '006'
+		) d ON a.cust_level = d.dict_id
+		<include refid="selectCustomerListWhere"/>
+		<!-- 执行分页查询 -->
+		<if test="start !=null and rows != null">
+			limit #{start},#{rows}
+		</if>
+	</select>
+	<!-- 查询客户总数 -->
+	<select id="selectCustomerListCount" parameterType="customer" 
+                                                 resultType="Integer">
+		select count(*) from customer
+		<include refid="selectCustomerListWhere"/>
+	</select>
+	<!-- 添加客户 -->
+	<insert id="createCustomer" parameterType="customer">
+	    insert into customer(
+	                     cust_name,
+	                     cust_user_id,
+	                     cust_create_id,
+	                     cust_source,
+	                     cust_industry,
+	                     cust_level,
+	                     cust_linkman,
+	                     cust_phone,
+	                     cust_mobile,
+	                     cust_zipcode,
+	                     cust_address,
+	                     cust_createtime
+	             )
+	             values(#{cust_name},
+	                    #{cust_user_id},
+	                    #{cust_create_id},
+	                    #{cust_source},
+	                    #{cust_industry},
+	                    #{cust_level},
+	                    #{cust_linkman},
+	                    #{cust_phone},
+	                    #{cust_mobile},
+	                    #{cust_zipcode},
+	                    #{cust_address},
+	                    #{cust_createtime}
+	            )
+	</insert>
+	<!-- 根据id获取客户信息 -->
+	<select id="getCustomerById" parameterType="Integer" 
+	resultType="customer">
+	    select * from customer where cust_id = #{id}
+	</select>
+	<!-- 更新客户 -->
+	<update id="updateCustomer" parameterType="customer">
+	    update customer
+	    <set>
+	        <if test="cust_name!=null">
+	            cust_name=#{cust_name},
+	        </if>
+	        <if test="cust_user_id!=null">
+	            cust_user_id=#{cust_user_id},
+	        </if>
+	        <if test="cust_create_id!=null">
+	            cust_create_id=#{cust_create_id},
+	        </if>
+	        <if test="cust_source!=null">
+	            cust_source=#{cust_source},
+	        </if>
+	        <if test="cust_industry!=null">
+	            cust_industry=#{cust_industry},
+	        </if>
+	        <if test="cust_level!=null">
+	            cust_level=#{cust_level},
+	        </if>
+	        <if test="cust_linkman!=null">
+	            cust_linkman=#{cust_linkman},
+	        </if>
+	        <if test="cust_phone!=null">
+	            cust_phone=#{cust_phone},
+	        </if>
+	        <if test="cust_mobile!=null">
+	            cust_mobile=#{cust_mobile},
+	        </if>
+	        <if test="cust_zipcode!=null">
+	            cust_zipcode=#{cust_zipcode},
+	        </if>
+	        <if test="cust_address!=null">
+	            cust_address=#{cust_address},
+	        </if>
+	        <if test="cust_createtime!=null">
+	            cust_createtime=#{cust_createtime},
+	        </if>
+	    </set>
+	    where cust_id=#{cust_id}
+	</update>
+	<!-- 删除客户 -->
+	<delete id="deleteCustomer" parameterType="Integer">
+	    delete from customer where cust_id=#{id}
+	</delete>
+	
+	<!-- <delete id="batchDeletes" parameterType="java.util.Map">
+		delete from customer where cust_id in
+        <foreach collection="delList" index="index" item="item" open="(" separator="," close=")">   
+        #{item}   
+		</foreach>
+	</delete> -->
+	<!-- 导入Excel文件 -->
+	<resultMap id="BaseResultMap" type="com.jwt.po.Customer" >                                                                 
+    <id column="cust_id" property="cust_id" jdbcType="INTEGER" />                                                                              
+    <result column="cust_name" property="cust_name" jdbcType="VARCHAR" />                                                             
+    <result column="cust_user_id" property="cust_user_id" jdbcType="INTEGER" />                                                              
+    <result column="cust_create_id" property="cust_create_id" jdbcType="INTEGER" />
+    <result column="cust_source" property="cust_source" jdbcType="VARCHAR" />
+    <result column="cust_industry" property="cust_industry" jdbcType="VARCHAR" />
+    <result column="cust_level" property="cust_level" jdbcType="VARCHAR" />
+    <result column="cust_linkman" property="cust_linkman" jdbcType="VARCHAR" />
+    <result column="cust_phone" property="cust_phone" jdbcType="VARCHAR" />
+    <result column="cust_mobile" property="cust_mobile" jdbcType="VARCHAR" />
+    <result column="cust_zipcode" property="cust_zipcode" jdbcType="VARCHAR" />
+    <result column="cust_address" property="cust_address" jdbcType="VARCHAR" />                                                  
+    <result column="cust_createtime" property="cust_createtime" jdbcType="DATE" />                                                                         
+    </resultMap>
+    <sql id="Base_Column_List" >                                                                                                       
+    cust_id, cust_name, cust_user_id, cust_create_id, cust_source, cust_industry, cust_level, cust_linkman, cust_phone, cust_mobile, cust_zipcode, cust_address, cust_createtime                                                                                               
+    </sql>                                                                                                                             
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >                                      
+    select                                                                                                                           
+    <include refid="Base_Column_List" />                                                                                             
+    from customer                                                                                                                      
+    where cust_id = #{cust_id,jdbcType=INTEGER}                                                                                                
+    </select>                                                                                                                          
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >                                                                
+    delete from people                                                                                                               
+    where cust_id = #{cust_id,jdbcType=INTEGER}                                                                                                
+    </delete>                                                                                                                          
+    <insert id="insert" parameterType="com.jwt.po.Customer" >                                                                  
+    insert into people (cust_id, cust_name, cust_user_id, cust_create_id, cust_source, cust_industry,
+     cust_level, cust_linkman, cust_phone, cust_mobile, cust_zipcode, cust_address, cust_createtime)                                                                                                                     
+    values (#{cust_id,jdbcType=INTEGER}, #{cust_name,jdbcType=VARCHAR}, #{cust_user_id,jdbcType=INTEGER},                                      
+      #{cust_create_id,jdbcType=INTEGER}, #{cust_source,jdbcType=VARCHAR}, #{cust_industry,jdbcType=VARCHAR}, 
+      #{cust_level,jdbcType=VARCHAR}, #{cust_linkman,jdbcType=VARCHAR}, #{cust_phone,jdbcType=VARCHAR}, 
+      #{cust_mobile,jdbcType=VARCHAR}, #{cust_zipcode,jdbcType=VARCHAR}, #{cust_address,jdbcType=VARCHAR}, #{cust_createtime,jdbcType=DATE})                                                                                
+    </insert>                                                                                                                          
+    <insert id="insertSelective" parameterType="com.jwt.po.Customer" >                                                         
+    insert into Customer                                                                                                               
+    <trim prefix="(" suffix=")" suffixOverrides="," >                                                                                
+      <if test="cust_id != null" >                                                                                                        
+        cust_id,                                                                                                                          
+      </if>                                                                                                                          
+      <if test="cust_name != null" >                                                                                                  
+        cust_name,                                                                                                                   
+      </if>                                                                                                                          
+      <if test="cust_user_id != null" >                                                                                                  
+        cust_user_id,                                                                                                                    
+      </if>                                                                                                                          
+      <if test="cust_create_id != null" >                                                                                                       
+        cust_create_id,                                                                                                                         
+      </if>                                                                                                                          
+      <if test="cust_source != null" >                                                                                                      
+        cust_source,                                                                                                                        
+      </if>
+      <if test="cust_industry != null" >                                                                                                      
+        cust_industry,                                                                                                                        
+      </if>
+      <if test="cust_level != null" >                                                                                                      
+        cust_level,                                                                                                                        
+      </if>
+      <if test="cust_linkman != null" >                                                                                                      
+        cust_linkman,                                                                                                                        
+      </if>
+      <if test="cust_phone != null" >                                                                                                      
+        cust_phone,                                                                                                                        
+      </if>
+      <if test="cust_mobile != null" >                                                                                                      
+        cust_mobile,                                                                                                                        
+      </if>
+      <if test="cust_zipcode != null" >                                                                                                      
+        cust_zipcode,                                                                                                                        
+      </if>
+      <if test="cust_address != null" >                                                                                                      
+        cust_address,                                                                                                                        
+      </if>
+      <if test="cust_createtime != null" >                                                                                                      
+        cust_createtime,                                                                                                                        
+      </if>                                                                                                                          
+    </trim>                                                                                                                          
+    <trim prefix="values (" suffix=")" suffixOverrides="," >                                                                         
+      <if test="cust_id != null" >                                                                                                        
+        #{cust_id,jdbcType=INTEGER},                                                                                                      
+      </if>                                                                                                                          
+      <if test="cust_name != null" >                                                                                                  
+        #{cust_name,jdbcType=VARCHAR},                                                                                                
+      </if>                                                                                                                          
+      <if test="cust_user_id != null" >                                                                                                  
+        #{cust_user_id,jdbcType=INTEGER},                                                                                                
+      </if>                                                                                                                          
+      <if test="cust_create_id != null" >                                                                                                       
+        #{cust_create_id,jdbcType=INTEGER},                                                                                                     
+      </if>
+      <if test="cust_source != null" >                                                                                                  
+        #{cust_source,jdbcType=VARCHAR},                                                                                                
+      </if>
+      <if test="cust_industry != null" >                                                                                                  
+        #{cust_industry,jdbcType=VARCHAR},                                                                                                
+      </if>
+      <if test="cust_level != null" >                                                                                                  
+        #{cust_level,jdbcType=VARCHAR},                                                                                                
+      </if>
+      <if test="cust_linkman != null" >                                                                                                  
+        #{cust_linkman,jdbcType=VARCHAR},                                                                                                
+      </if>
+      <if test="cust_phone != null" >                                                                                                  
+        #{cust_phone,jdbcType=VARCHAR},                                                                                                
+      </if>
+      <if test="cust_mobile != null" >                                                                                                  
+        #{cust_name,jdbcType=VARCHAR},                                                                                                
+      </if>
+       <if test="cust_zipcode != null" >                                                                                                  
+        #{cust_zipcode,jdbcType=VARCHAR},                                                                                                
+      </if>
+       <if test="cust_address != null" >                                                                                                  
+        #{cust_address,jdbcType=VARCHAR},                                                                                                
+      </if>                                                                                                                          
+      <if test="cust_createtime != null" >                                                                                                      
+        #{cust_createtime,jdbcType=DATE},                                                                                                       
+      </if>                                                                                                                          
+    </trim>                                                                                                                          
+  </insert>                                                                                                                          
+  <update id="updateByPrimaryKeySelective" parameterType="com.jwt.po.Customer" >                                             
+    update Customer                                                                                                                    
+    <set >                                                                                                                           
+      <if test="cust_name != null" >                                                                                                  
+        #{cust_name,jdbcType=VARCHAR},                                                                                                
+      </if>                                                                                                                          
+      <if test="cust_user_id != null" >                                                                                                  
+        #{cust_user_id,jdbcType=INTEGER},                                                                                                
+      </if>                                                                                                                          
+      <if test="cust_create_id != null" >                                                                                                       
+        #{cust_create_id,jdbcType=INTEGER},                                                                                                     
+      </if>
+      <if test="cust_source != null" >                                                                                                  
+        #{cust_source,jdbcType=VARCHAR},                                                                                                
+      </if>
+      <if test="cust_industry != null" >                                                                                                  
+        #{cust_industry,jdbcType=VARCHAR},                                                                                                
+      </if>
+      <if test="cust_level != null" >                                                                                                  
+        #{cust_level,jdbcType=VARCHAR},                                                                                                
+      </if>
+      <if test="cust_linkman != null" >                                                                                                  
+        #{cust_linkman,jdbcType=VARCHAR},                                                                                                
+      </if>
+      <if test="cust_phone != null" >                                                                                                  
+        #{cust_phone,jdbcType=VARCHAR},                                                                                                
+      </if>
+      <if test="cust_mobile != null" >                                                                                                  
+        #{cust_name,jdbcType=VARCHAR},                                                                                                
+      </if>
+       <if test="cust_zipcode != null" >                                                                                                  
+        #{cust_zipcode,jdbcType=VARCHAR},                                                                                                
+      </if>
+       <if test="cust_address != null" >                                                                                                  
+        #{cust_address,jdbcType=VARCHAR},                                                                                                
+      </if>                                                                                                                          
+      <if test="cust_createtime != null" >                                                                                                      
+        #{cust_createtime,jdbcType=DATE},                                                                                                       
+      </if>                                                                                                                          
+    </set>                                                                                                                           
+    where cust_id = #{cust_id,jdbcType=INTEGER}                                                                                                
+  </update>                                                                                                                          
+  <update id="updateByPrimaryKey" parameterType="com.jwt.po.Customer" >                                                      
+    update Customer                                                                                                                    
+    set
+      cust_name = #{cust_name,jdbcType=VARCHAR},
+      cust_user_id = #{cust_user_id,jdbcType=INTEGER},                                  
+      cust_create_id = #{cust_create_id,jdbcType=INTEGER},
+      cust_source = #{cust_source,jdbcType=VARCHAR},
+      cust_industry = #{cust_industry,jdbcType=VARCHAR}, 
+      cust_level = #{cust_level,jdbcType=VARCHAR},
+      cust_linkman = #{cust_linkman,jdbcType=VARCHAR},
+      cust_phone = #{cust_phone,jdbcType=VARCHAR}, 
+      cust_mobile = #{cust_mobile,jdbcType=VARCHAR},
+      cust_zipcode = #{cust_zipcode,jdbcType=VARCHAR},
+      cust_address = #{cust_address,jdbcType=VARCHAR},
+      cust_createtime = #{cust_createtime,jdbcType=DATE}                                                                                                   
+    where cust_id = #{cust_id,jdbcType=INTEGER}                                                                                                
+  </update> 
+</mapper>
